@@ -22,6 +22,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for Postman testing
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/register").permitAll() // Open registration to everyone
+                        .requestMatchers("/api/products/**").permitAll()
+                        .requestMatchers("/api/orders/**").permitAll()
+                        .requestMatchers("/api/payments/**").permitAll()
+                        .requestMatchers("/api/payouts/**").permitAll()
                         .anyRequest().authenticated() // Keep everything else locked
                 );
 
