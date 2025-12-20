@@ -1,0 +1,26 @@
+package com.fashionapp.resale_backend.user;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "user_photos")
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserPhoto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String url;
+
+    private String photoType; // e.g., "FULL_BODY", "PORTRAIT"
+
+    private boolean isPrimary = false;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+}
