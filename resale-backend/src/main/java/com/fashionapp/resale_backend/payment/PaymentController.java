@@ -1,5 +1,6 @@
 package com.fashionapp.resale_backend.payment;
 
+import com.fashionapp.resale_backend.payment.dto.PaymentResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +15,7 @@ public class PaymentController {
     }
 
     @PostMapping("/{orderId}")
-    public ResponseEntity<Payment> pay(@PathVariable Long orderId, @RequestParam String method) {
+    public ResponseEntity<PaymentResponseDto> pay(@PathVariable Long orderId, @RequestParam String method) {
         return ResponseEntity.ok(paymentService.processPayment(orderId, method));
     }
 }

@@ -1,9 +1,12 @@
 package com.fashionapp.resale_backend.product;
 
 import com.fashionapp.resale_backend.user.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -20,17 +23,25 @@ public class Product {
     private String description;
     private Double basePrice;
     private String brand;
-
-    // In resale, condition is vital
     private String condition;
 
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
+    @JsonBackReference("user-products") // Matches parent name in User
     private User seller;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @JsonBackReference("product-category") // Matches parent name in Category
     private Category category;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @JsonManagedReference("product-variants") // Matches child name in ProductVariant
+    private List<ProductVariant> variants;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @JsonManagedReference("product-images") // Matches child name in ProductImage
+    private List<ProductImage> images;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 }

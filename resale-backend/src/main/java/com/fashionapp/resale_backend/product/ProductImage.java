@@ -1,5 +1,6 @@
 package com.fashionapp.resale_backend.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,9 +17,10 @@ public class ProductImage {
     @Column(nullable = false)
     private String url;
 
-    private boolean isMainImage = false; // The thumbnail shown in search results
+    private boolean isMainImage = false;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonBackReference("product-images")
     private Product product;
 }

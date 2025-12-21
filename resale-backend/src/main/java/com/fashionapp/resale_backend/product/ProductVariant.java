@@ -1,5 +1,6 @@
 package com.fashionapp.resale_backend.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,11 +14,12 @@ public class ProductVariant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String size;  // e.g., "M", "L", "32"
-    private String color; // e.g., "Navy Blue"
-    private Integer stockQuantity; // How many are available
+    private String size;
+    private String color;
+    private Integer stockQuantity;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonBackReference("product-variants")
     private Product product;
 }

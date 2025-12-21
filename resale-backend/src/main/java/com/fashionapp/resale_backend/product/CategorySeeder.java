@@ -15,12 +15,35 @@ public class CategorySeeder implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (categoryRepository.count() == 0) {
-            Category tops = categoryRepository.save(new Category("Tops", null));
-            Category bottoms = categoryRepository.save(new Category("Bottoms", null));
+            // Level 1: Main Departments
+            Category men = categoryRepository.save(new Category("Men", null));
+            Category women = categoryRepository.save(new Category("Women", null));
+            Category accessories = categoryRepository.save(new Category("Accessories", null));
 
-            categoryRepository.save(new Category("Vintage T-Shirts", tops));
+            // Level 2 & 3: Men's Hierarchy (Names must be unique!)
+            Category menTops = categoryRepository.save(new Category("Men's Tops", men));
+            categoryRepository.save(new Category("Men's T-Shirts", menTops));
+            categoryRepository.save(new Category("Men's Hoodies", menTops));
 
-            System.out.println("--- Fashion Categories Initialized Successfully ---");
+            Category menBottoms = categoryRepository.save(new Category("Men's Bottoms", men));
+            categoryRepository.save(new Category("Men's Jeans", menBottoms));
+            categoryRepository.save(new Category("Men's Shorts", menBottoms));
+
+            // Level 2 & 3: Women's Hierarchy
+            Category womenTops = categoryRepository.save(new Category("Women's Tops", women));
+            categoryRepository.save(new Category("Women's Blouses", womenTops));
+            categoryRepository.save(new Category("Women's Dresses", womenTops));
+
+            Category womenBottoms = categoryRepository.save(new Category("Women's Bottoms", women));
+            categoryRepository.save(new Category("Women's Skirts", womenBottoms));
+            categoryRepository.save(new Category("Women's Leggings", womenBottoms));
+
+            // Level 2: Accessories
+            categoryRepository.save(new Category("Bags", accessories));
+            categoryRepository.save(new Category("Watches", accessories));
+            categoryRepository.save(new Category("Jewelry", accessories));
+
+            System.out.println("--- Marketplace Categories Initialized Successfully ---");
         }
     }
 }

@@ -28,8 +28,7 @@ public class PayoutService {
                 .filter(o -> "PAID".equals(o.getStatus()))
                 .orElseThrow(() -> new RuntimeException("Order not paid or not found"));
 
-        // 2. Identify the Seller
-        // Note: In our schema, the Product belongs to a Seller
+        // 2. Identify the Seller from the first item (Assuming one seller per order)
         User seller = order.getItems().get(0).getProductVariant().getProduct().getSeller();
 
         // 3. Create Payout record

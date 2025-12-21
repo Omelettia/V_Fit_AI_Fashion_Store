@@ -1,9 +1,9 @@
 package com.fashionapp.resale_backend.user;
 
-import com.fashionapp.resale_backend.user.Role;
+import com.fashionapp.resale_backend.product.Product;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +28,6 @@ public class User {
     private String firstName;
     private String lastName;
 
-
     private Double height; // in cm
     private Double weight; // in kg
 
@@ -37,7 +36,12 @@ public class User {
     private Double balance = 0.0;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("user-photos")
     private List<UserPhoto> photos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
+    @JsonManagedReference("user-products")
+    private List<Product> products = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

@@ -1,5 +1,6 @@
 package com.fashionapp.resale_backend.user;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,10 +18,10 @@ public class UserPhoto {
     private String url;
 
     private String photoType; // e.g., "FULL_BODY", "PORTRAIT"
-
     private boolean isPrimary = false;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonBackReference("user-photos") // Matches parent name in User
     private User user;
 }

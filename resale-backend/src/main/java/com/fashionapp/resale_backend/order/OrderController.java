@@ -1,6 +1,7 @@
 package com.fashionapp.resale_backend.order;
 
 import com.fashionapp.resale_backend.order.dto.OrderCreateDto;
+import com.fashionapp.resale_backend.order.dto.OrderResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +15,9 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> placeOrder(@RequestBody OrderCreateDto dto) {
-        return ResponseEntity.ok(orderService.placeOrder(dto));
+    public ResponseEntity<OrderResponseDto> placeOrder(@RequestBody OrderCreateDto dto) {
+        OrderResponseDto response = orderService.placeOrder(dto);
+
+        return ResponseEntity.ok(response);
     }
 }
