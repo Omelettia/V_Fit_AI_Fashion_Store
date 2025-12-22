@@ -33,4 +33,3 @@ build/
 .vscode/
 
 src/main/resources/application-secrets.properties
-fashionapp-481907-ef243d41dd2e.json

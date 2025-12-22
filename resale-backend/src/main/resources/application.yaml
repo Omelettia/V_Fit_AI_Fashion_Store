@@ -1,11 +1,32 @@
 server:
   port: 8081
 
+# Custom property for your GCS bucket
+gcp:
+  bucket:
+    name: resale-ai-outputs-232931
+
 spring:
   config:
     import: "optional:classpath:application-secrets.properties"
   application:
     name: resale-backend
+  ai:
+    vertex:
+      ai:
+        gemini:
+          project-id: project-e3f1272c-e056-48d4-8a9
+          location: us-central1
+
+  cloud:
+    gcp:
+      # Workload Identity doesn't need 'credentials.location'
+      # It uses Application Default Credentials (ADC) automatically
+      storage:
+        enabled: true
+      core:
+        project-id: project-e3f1272c-e056-48d4-8a9
+
   datasource:
     url: jdbc:postgresql://localhost:5432/resale_market_db
     username: postgres
@@ -15,3 +36,4 @@ spring:
       ddl-auto: create
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false

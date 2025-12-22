@@ -1,12 +1,16 @@
 package com.fashionapp.resale_backend.product;
 
-import com.fashionapp.resale_backend.config.CloudinaryService;
+import com.fashionapp.resale_backend.common.ai.VirtualTryOnService;
+import com.fashionapp.resale_backend.common.storage.GcsService;
 import com.fashionapp.resale_backend.product.dto.ProductCreateDto;
 import com.fashionapp.resale_backend.product.dto.ProductResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/products")
@@ -16,7 +20,8 @@ public class ProductController {
     private final ProductService productService;
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
-    private final CloudinaryService cloudinaryService;
+    private final GcsService gcsService;
+    private final VirtualTryOnService virtualTryOnService;
 
     @PostMapping
     public ResponseEntity<ProductResponseDto> createProduct(@RequestBody ProductCreateDto dto) {
@@ -24,22 +29,34 @@ public class ProductController {
     }
 
     @PostMapping("/{productId}/upload-images")
+    @Transactional // Fixes LazyInitializationException for product variants/categories
     public ResponseEntity<ProductResponseDto> uploadProductImages(
             @PathVariable Long productId,
-            @RequestParam("files") MultipartFile[] files) {
+            @RequestParam("files") MultipartFile[] files) throws IOException {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         for (MultipartFile file : files) {
-            String cloudUrl = cloudinaryService.uploadFile(file);
+            // Upload to the "products" folder in GCS
+            String gcsUri = gcsService.uploadFile(file, "products");
+
             ProductImage image = new ProductImage();
-            image.setUrl(cloudUrl);
+            image.setUrl(gcsUri);
             image.setProduct(product);
             productImageRepository.save(image);
         }
 
-        // Return the updated product view
+
         return ResponseEntity.ok(productService.mapToResponse(product));
+    }
+
+    @PostMapping("/try-on")
+    public ResponseEntity<String> tryOn(
+            @RequestParam String personUri,
+            @RequestParam String productUri) throws IOException {
+
+        virtualTryOnService.executeTryOn(personUri, productUri);
+        return ResponseEntity.ok("Try-on initiated. Check your GCS results folder!");
     }
 }

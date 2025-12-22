@@ -32,8 +32,7 @@ public class SecurityConfig {
                         // Public Endpoints
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll() // Allow browsing
-
-
+                        .requestMatchers(HttpMethod.POST, "/api/products/try-on").authenticated()
                         .anyRequest().authenticated()
                 )
                 // Tell Spring to check the JWT Token BEFORE checking the username/password
