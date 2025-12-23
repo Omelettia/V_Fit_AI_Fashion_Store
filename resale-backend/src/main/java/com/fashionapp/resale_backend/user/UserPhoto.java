@@ -17,8 +17,12 @@ public class UserPhoto {
     @Column(nullable = false)
     private String url;
 
+    @Column(nullable = false)
+    private String gcsUri;
+
     private String photoType; // e.g., "FULL_BODY", "PORTRAIT"
     private boolean isPrimary = false;
+
 
     @ManyToOne
     @JoinColumn(name = "user_id")

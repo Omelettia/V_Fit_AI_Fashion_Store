@@ -35,6 +35,10 @@ public class User {
     private String shopName;
     private Double balance = 0.0;
 
+    @OneToOne
+    @JoinColumn(name = "profile_picture_id")
+    private UserPhoto profilePicture;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("user-photos")
     private List<UserPhoto> photos = new ArrayList<>();

@@ -1,6 +1,5 @@
 package com.fashionapp.resale_backend.common.storage;
 
-import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
@@ -22,20 +21,37 @@ public class GcsService {
     private String bucketName;
 
     /**
-     * Uploads a file to a specific folder in GCS.
-     * @return The full gs:// URI (e.g., gs://my-bucket/products/uuid.jpg)
+     * Uploads a file to GCS and returns both public and internal links.
+     * Required for dual-use: Frontend rendering and AI processing.
      */
-    public String uploadFile(MultipartFile file, String folder) throws IOException {
-        // Create a unique filename to avoid overwrites
+    public FileUploadResult uploadFile(MultipartFile file, String folder) throws IOException {
+        // 1. Generate unique filename
         String fileName = folder + "/" + UUID.randomUUID() + "_" + file.getOriginalFilename();
 
+        // 2. Configure Blob metadata
         BlobId blobId = BlobId.of(bucketName, fileName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
                 .setContentType(file.getContentType())
                 .build();
 
+        // 3. Perform the upload to Google Cloud
         storage.create(blobInfo, file.getBytes());
 
-        return String.format("gs://%s/%s", bucketName, fileName);
+        // 4. Construct the Internal URI for Vertex AI / Gemini
+        // Format: gs://bucket-name/folder/filename.jpg
+        String gcsUri = String.format("gs://%s/%s", bucketName, fileName);
+
+        // 5. Construct the Public URL for React Frontend
+        // Format: https://storage.googleapis.com/bucket-name/folder/filename.jpg
+        String publicUrl = String.format("https://storage.googleapis.com/%s/%s", bucketName, fileName);
+
+        return new FileUploadResult(publicUrl, gcsUri);
+    }
+
+    public void deleteFile(String gcsUri) {
+        // Convert gs://bucket/folder/file.jpg to folder/file.jpg
+        String fileName = gcsUri.replace("gs://" + bucketName + "/", "");
+        BlobId blobId = BlobId.of(bucketName, fileName);
+        storage.delete(blobId);
     }
 }

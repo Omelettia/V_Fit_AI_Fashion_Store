@@ -1,17 +1,14 @@
 package com.fashionapp.resale_backend.user;
 
-import com.fashionapp.resale_backend.common.storage.GcsService;
 import com.fashionapp.resale_backend.config.JwtService;
-import com.fashionapp.resale_backend.user.dto.LoginResponse;
-import com.fashionapp.resale_backend.user.dto.UserRegistrationDto;
-import com.fashionapp.resale_backend.user.dto.LoginRequest;
+import com.fashionapp.resale_backend.user.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,33 +17,11 @@ public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
-    private final UserPhotoRepository userPhotoRepository;
-    private final GcsService gcsService;
     private final JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody UserRegistrationDto registrationDto) {
-        User savedUser = userService.registerUser(registrationDto);
-        return ResponseEntity.ok(savedUser);
-    }
-
-    @PostMapping("/{userId}/upload-photo")
-    @Transactional
-    public ResponseEntity<UserPhoto> uploadPhoto(
-            @PathVariable Long userId,
-            @RequestParam("file") MultipartFile file) throws IOException {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Upload to the "users" folder in GCS
-        String gcsUri = gcsService.uploadFile(file, "users");
-
-        UserPhoto photo = new UserPhoto();
-        photo.setUrl(gcsUri); // Stores the gs:// URI
-        photo.setUser(user);
-
-        return ResponseEntity.ok(userPhotoRepository.save(photo));
+        return ResponseEntity.ok(userService.registerUser(registrationDto));
     }
 
     @PostMapping("/login")
@@ -58,5 +33,38 @@ public class UserController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(401).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<User> getCurrentUser(Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<User> updateProfile(@PathVariable Long userId, @RequestBody ProfileUpdateDto updateDto) {
+        return ResponseEntity.ok(userService.updateProfile(userId, updateDto));
+    }
+
+    @PostMapping("/{userId}/upload-photo")
+    public ResponseEntity<UserPhoto> uploadPhoto(@PathVariable Long userId, @RequestParam("file") MultipartFile file) throws IOException {
+        return ResponseEntity.ok(userService.addPhotoToGallery(userId, file));
+    }
+
+    @PostMapping("/{userId}/select-profile-picture/{photoId}")
+    public ResponseEntity<User> selectProfilePicture(@PathVariable Long userId, @PathVariable Long photoId) {
+        return ResponseEntity.ok(userService.setProfilePicture(userId, photoId));
+    }
+
+    @DeleteMapping("/{userId}/photos/{photoId}")
+    public ResponseEntity<Void> deletePhoto(@PathVariable Long userId, @PathVariable Long photoId) {
+        userService.deletePhoto(userId, photoId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{userId}/upgrade-to-seller")
+    public ResponseEntity<User> upgradeToSeller(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.upgradeToSeller(userId));
     }
 }

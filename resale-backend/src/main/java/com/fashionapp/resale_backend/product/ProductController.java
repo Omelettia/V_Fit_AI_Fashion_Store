@@ -1,6 +1,7 @@
 package com.fashionapp.resale_backend.product;
 
 import com.fashionapp.resale_backend.common.ai.VirtualTryOnService;
+import com.fashionapp.resale_backend.common.storage.FileUploadResult;
 import com.fashionapp.resale_backend.common.storage.GcsService;
 import com.fashionapp.resale_backend.product.dto.ProductCreateDto;
 import com.fashionapp.resale_backend.product.dto.ProductResponseDto;
@@ -29,7 +30,7 @@ public class ProductController {
     }
 
     @PostMapping("/{productId}/upload-images")
-    @Transactional // Fixes LazyInitializationException for product variants/categories
+    @Transactional
     public ResponseEntity<ProductResponseDto> uploadProductImages(
             @PathVariable Long productId,
             @RequestParam("files") MultipartFile[] files) throws IOException {
@@ -38,16 +39,18 @@ public class ProductController {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         for (MultipartFile file : files) {
-            // Upload to the "products" folder in GCS
-            String gcsUri = gcsService.uploadFile(file, "products");
+            // 1. Upload and receive the FileUploadResult
+            FileUploadResult result = gcsService.uploadFile(file, "products");
 
             ProductImage image = new ProductImage();
-            image.setUrl(gcsUri);
+            image.setUrl(result.publicUrl()); // Public HTTPS link
+            image.setGcsUri(result.gcsUri()); // Internal gs:// link
             image.setProduct(product);
+
             productImageRepository.save(image);
         }
 
-
+        // Refresh product to include new images in the response
         return ResponseEntity.ok(productService.mapToResponse(product));
     }
 

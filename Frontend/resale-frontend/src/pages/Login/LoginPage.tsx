@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/LoginForm"
+import { LoginForm } from "@/pages/Login/LoginForm"
 import { Link } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 

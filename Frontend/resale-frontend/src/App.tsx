@@ -1,8 +1,9 @@
 import { Routes, Route } from "react-router-dom"
 import { Header } from "@/components/Header"
 import { ProductCard } from "@/components/ProductCard"
-import RegisterPage from "@/pages/RegisterPage"
-import LoginPage from "@/pages/LoginPage"
+import RegisterPage from "@/pages/Register/RegisterPage"
+import LoginPage from "@/pages/Login/LoginPage"
+import ProfilePage from "@/pages/Profile/ProfilePage"
 
 // Move your MOCK_PRODUCTS to a separate file later, but keep it here for now
 const MOCK_PRODUCTS = [
@@ -34,6 +35,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           {/* Route 3: The Register Page */}
           <Route path="/register" element={<RegisterPage />} />
+          {/* Route 4: The Profile Page */}
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
 

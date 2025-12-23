@@ -1,4 +1,4 @@
-import { RegisterForm } from "@/components/RegisterForm"
+import { RegisterForm } from "@/pages/Register/RegisterForm"
 import { Link } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 

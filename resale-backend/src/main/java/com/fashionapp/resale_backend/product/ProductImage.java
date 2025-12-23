@@ -17,6 +17,9 @@ public class ProductImage {
     @Column(nullable = false)
     private String url;
 
+    @Column(nullable = false)
+    private String gcsUri;
+
     private boolean isMainImage = false;
 
     @ManyToOne
