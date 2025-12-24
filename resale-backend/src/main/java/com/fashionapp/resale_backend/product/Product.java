@@ -35,11 +35,11 @@ public class Product {
     @JsonBackReference("product-category") // Matches parent name in Category
     private Category category;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("product-variants") // Matches child name in ProductVariant
     private List<ProductVariant> variants;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("product-images") // Matches child name in ProductImage
     private List<ProductImage> images;
 

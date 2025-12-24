@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/ProductCard"
 import RegisterPage from "@/pages/Register/RegisterPage"
 import LoginPage from "@/pages/Login/LoginPage"
 import ProfilePage from "@/pages/Profile/ProfilePage"
+import SellerDashboardPage from "./pages/SellerDashboard/SellerDashboardPage";
 
 // Move your MOCK_PRODUCTS to a separate file later, but keep it here for now
 const MOCK_PRODUCTS = [
@@ -37,6 +38,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           {/* Route 4: The Profile Page */}
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
         </Routes>
       </main>
 

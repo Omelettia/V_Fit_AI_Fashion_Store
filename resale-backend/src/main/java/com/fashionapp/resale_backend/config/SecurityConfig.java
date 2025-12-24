@@ -41,6 +41,7 @@ public class SecurityConfig {
                         // Public Endpoints
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll() // Allow browsing
+                        .requestMatchers("/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products/try-on").authenticated()
                         .anyRequest().authenticated()
                 )

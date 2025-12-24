@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -98,5 +99,63 @@ public class ProductService {
                 .collect(Collectors.toList()));
 
         return response;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponseDto> getProductsBySeller(Long sellerId) {
+        // 1. Fetch the raw entities from the repository
+        List<Product> products = productRepository.findBySellerId(sellerId);
+
+        // 2. Map the entities to Response DTOs
+        return products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ProductResponseDto updateProduct(Long productId, ProductCreateDto dto) {
+        // 1. Find the existing product
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // 2. Security Check: Ensure the logged-in user owns this product
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!product.getSeller().getEmail().equals(email)) {
+            throw new RuntimeException("Unauthorized to edit this product");
+        }
+
+        // 3. Update basic details
+        product.setName(dto.getName());
+        product.setDescription(dto.getDescription());
+        product.setBasePrice(dto.getBasePrice());
+        product.setBrand(dto.getBrand());
+        product.setCondition(dto.getCondition());
+
+        // 4. Update Variants
+        product.getVariants().clear();
+        if (dto.getVariants() != null) {
+            dto.getVariants().forEach(vDto -> {
+                ProductVariant variant = new ProductVariant();
+                variant.setSize(vDto.getSize());
+                variant.setColor(vDto.getColor());
+                variant.setStockQuantity(vDto.getStockQuantity());
+                variant.setProduct(product);
+                product.getVariants().add(variant);
+            });
+        }
+
+        Product updatedProduct = productRepository.save(product);
+        return mapToResponse(updatedProduct);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponseDto> getAllProducts() {
+        // 1. Fetch all products from the database
+        List<Product> products = productRepository.findAll();
+
+        // 2. Map the entities to Response DTOs
+        return products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 }
