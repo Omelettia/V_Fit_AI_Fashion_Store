@@ -102,6 +102,10 @@ public class ProductService {
                 .map(ProductImage::getUrl)
                 .collect(Collectors.toList()));
 
+        response.setImageGcsUris(product.getImages().stream()
+                .map(ProductImage::getGcsUri)
+                .collect(Collectors.toList()));
+
         return response;
     }
 

@@ -15,4 +15,5 @@ public class ProductResponseDto {
     private String sellerShopName;
     private List<ProductVariantDto> variants;
     private List<String> imageUrls;
+    private List<String> imageGcsUris;
 }

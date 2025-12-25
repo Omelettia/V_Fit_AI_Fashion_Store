@@ -7,6 +7,8 @@ gcp:
     name: resale-ai-outputs-232931
 
 spring:
+  codec:
+    max-in-memory-size: 10MB
   config:
     import: "optional:classpath:application-secrets.properties"
   application:

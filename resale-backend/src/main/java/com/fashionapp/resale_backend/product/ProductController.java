@@ -20,6 +20,7 @@ import org.springframework.data.web.PageableDefault;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -65,12 +66,14 @@ public class ProductController {
     }
 
     @PostMapping("/try-on")
-    public ResponseEntity<String> tryOn(
+    public ResponseEntity<Map<String, String>> tryOn(
             @RequestParam String personUri,
             @RequestParam String productUri) throws IOException {
 
-        virtualTryOnService.executeTryOn(personUri, productUri);
-        return ResponseEntity.ok("Try-on initiated. Check your GCS results folder!");
+        // This now returns a "data:image/png;base64,..." string
+        String imageUrl = virtualTryOnService.executeTryOn(personUri, productUri);
+
+        return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
     }
 
 
