@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,6 +91,7 @@ public class ProductService {
 
         response.setVariants(product.getVariants().stream().map(v -> {
             ProductVariantDto vDto = new ProductVariantDto();
+            vDto.setId(v.getId());
             vDto.setSize(v.getSize());
             vDto.setColor(v.getColor());
             vDto.setStockQuantity(v.getStockQuantity());
@@ -148,14 +152,20 @@ public class ProductService {
         return mapToResponse(updatedProduct);
     }
 
-    @Transactional(readOnly = true)
-    public List<ProductResponseDto> getAllProducts() {
-        // 1. Fetch all products from the database
-        List<Product> products = productRepository.findAll();
 
-        // 2. Map the entities to Response DTOs
-        return products.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<ProductResponseDto> getAllProductsPaginated(Pageable pageable) {
+        // 1. Fetch a "Page" of entities from DB
+        Page<Product> productPage = productRepository.findAll(pageable);
+
+        // 2. Map the entities to DTOs automatically
+        return productPage.map(this::mapToResponse);
     }
+
+    public ProductResponseDto getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        return mapToResponse(product);
+    }
+
 }

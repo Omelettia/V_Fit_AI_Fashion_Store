@@ -1,5 +1,6 @@
 package com.fashionapp.resale_backend.user;
 
+import com.fashionapp.resale_backend.address.Address;
 import com.fashionapp.resale_backend.product.Product;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -46,6 +47,10 @@ public class User {
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
     @JsonManagedReference("user-products")
     private List<Product> products = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("user-addresses")
+    private List<Address> addresses = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

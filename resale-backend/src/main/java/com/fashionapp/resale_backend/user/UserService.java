@@ -1,5 +1,7 @@
 package com.fashionapp.resale_backend.user;
 
+import com.fashionapp.resale_backend.address.Address;
+import com.fashionapp.resale_backend.address.dto.AddressCreateDto;
 import com.fashionapp.resale_backend.common.storage.FileUploadResult;
 import com.fashionapp.resale_backend.common.storage.GcsService;
 import com.fashionapp.resale_backend.user.dto.ProfileUpdateDto;
@@ -62,7 +64,8 @@ public class UserService {
 
     @Transactional
     public User updateProfile(Long userId, ProfileUpdateDto updateDto) {
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findByIdWithRoles(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         user.setFirstName(updateDto.firstName());
         user.setLastName(updateDto.lastName());
         user.setHeight(updateDto.height());
@@ -122,5 +125,45 @@ public class UserService {
 
         gcsService.deleteFile(photo.getGcsUri());
         userPhotoRepository.delete(photo);
+    }
+
+    @Transactional
+    public User addAddress(Long userId, AddressCreateDto addressDto) {
+        User user = userRepository.findById(userId).orElseThrow();
+
+        Address address = new Address();
+        address.setUser(user);
+        address.setFullName(addressDto.getFullName());
+        address.setPhoneNumber(addressDto.getPhoneNumber());
+        address.setStreetAddress(addressDto.getStreetAddress());
+        address.setCity(addressDto.getCity());
+        address.setState(addressDto.getState());
+        address.setPostalCode(addressDto.getPostalCode());
+        address.setCountry(addressDto.getCountry());
+        address.setDefault(addressDto.isDefault());
+
+        // If setting a new default, reset others
+        if (address.isDefault()) {
+            user.getAddresses().forEach(a -> a.setDefault(false));
+        }
+
+        user.getAddresses().add(address);
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteAddress(Long userId, Long addressId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Find the address within the user's collection to ensure ownership
+        Address address = user.getAddresses().stream()
+                .filter(a -> a.getId().equals(addressId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Address not found or access denied"));
+
+        user.getAddresses().remove(address);
+        // Address is removed from DB via 'orphanRemoval = true' in User entity
+        userRepository.save(user);
     }
 }

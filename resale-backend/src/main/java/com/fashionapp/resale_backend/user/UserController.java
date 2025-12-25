@@ -1,5 +1,6 @@
 package com.fashionapp.resale_backend.user;
 
+import com.fashionapp.resale_backend.address.dto.AddressCreateDto;
 import com.fashionapp.resale_backend.config.JwtService;
 import com.fashionapp.resale_backend.user.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -66,5 +67,22 @@ public class UserController {
     @PostMapping("/{userId}/upgrade-to-seller")
     public ResponseEntity<User> upgradeToSeller(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.upgradeToSeller(userId));
+    }
+
+    // Endpoint to add a new address to the user profile
+    @PostMapping("/{userId}/addresses")
+    public ResponseEntity<User> addAddress(
+            @PathVariable Long userId,
+            @RequestBody AddressCreateDto addressDto) {
+        return ResponseEntity.ok(userService.addAddress(userId, addressDto));
+    }
+
+    // Endpoint to delete an address from the user profile
+    @DeleteMapping("/{userId}/addresses/{addressId}")
+    public ResponseEntity<Void> deleteAddress(
+            @PathVariable Long userId,
+            @PathVariable Long addressId) {
+        userService.deleteAddress(userId, addressId);
+        return ResponseEntity.noContent().build();
     }
 }

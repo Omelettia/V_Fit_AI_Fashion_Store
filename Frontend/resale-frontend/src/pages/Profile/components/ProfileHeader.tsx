@@ -1,24 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Pencil, X, User as UserIcon, ShieldCheck, Store, Images } from "lucide-react";
 
-interface Role {
-  id: number;
-  name: string;
-}
-
-interface UserPhoto {
-  id: number;
-  url: string;
-}
-
-interface UserProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  roles: Role[];
-  profilePicture?: UserPhoto;
-  photos: UserPhoto[];
-}
+import type { UserProfile } from "@/types"; 
 
 interface ProfileHeaderProps {
   user: UserProfile;
@@ -30,7 +13,6 @@ export function ProfileHeader({ user, isEditing, setIsEditing }: ProfileHeaderPr
   const avatarUrl = user.profilePicture?.url;
   const photoCount = user.photos?.length || 0;
 
-  // Industrial Standard: Smooth scroll to specific feature sections
   const scrollToGallery = () => {
     const element = document.getElementById("photo-gallery");
     if (element) {
@@ -61,7 +43,6 @@ export function ProfileHeader({ user, isEditing, setIsEditing }: ProfileHeaderPr
               </div>
             )}
 
-            {/* Professional Hover Overlay */}
             <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <Images className="text-white mb-1" size={20} />
               <span className="text-[10px] text-white font-bold uppercase tracking-widest">Gallery</span>

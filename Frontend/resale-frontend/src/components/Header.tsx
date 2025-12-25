@@ -15,13 +15,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Header() {
-  // 1. Reactive Auth State via Context
+// Define the Props interface for the Header
+interface HeaderProps {
+  onOpenCart: () => void;
+}
+
+export function Header({ onOpenCart }: HeaderProps) {
   const { user, setUser } = useAuth(); 
   const navigate = useNavigate();
   const cartCount = useCartStore((state) => state.count);
 
-  // 2. Logout Handler using Global State
   const handleLogout = () => {
     localStorage.removeItem("token");
     setUser(null); 
@@ -32,12 +35,10 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md p-4">
       <div className="container mx-auto flex items-center justify-between gap-4">
         
-        {/* Brand Link */}
         <Link to="/" className="hover:opacity-80 transition-opacity">
           <h1 className="text-xl font-black tracking-tighter uppercase">FASHION_RE</h1>
         </Link>
 
-        {/* Search Bar */}
         <div className="relative flex-1 max-w-md hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <Input 
@@ -47,17 +48,19 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-5">
-          {/* Cart Icon */}
-          <Link to="/cart" className="relative cursor-pointer hover:opacity-70 transition-opacity">
+          {/* Cart Trigger: Button instead of Link to avoid page disruption */}
+          <button 
+            onClick={onOpenCart} 
+            className="relative cursor-pointer hover:opacity-70 transition-opacity outline-none"
+          >
             <ShoppingCart className="h-6 w-6" />
             {cartCount > 0 && (
               <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center rounded-full p-0 text-[10px] bg-black text-white border-2 border-white">
                 {cartCount}
               </Badge>
             )}
-          </Link>
+          </button>
 
-          {/* 3. Conditional Authentication UI */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -83,7 +86,6 @@ export function Header() {
                   </Link>
                 </DropdownMenuItem>
 
-                {/*Only show Studio for Sellers */}
                 {user.roles?.some((r: any) => r.name === "ROLE_SELLER") && (
                   <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
                     <Link to="/seller/dashboard">

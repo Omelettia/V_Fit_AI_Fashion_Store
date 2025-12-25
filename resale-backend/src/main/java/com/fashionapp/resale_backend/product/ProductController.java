@@ -13,6 +13,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 
 import java.io.IOException;
@@ -91,10 +94,16 @@ public class ProductController {
         return ResponseEntity.ok(productService.updateProduct(id, dto));
     }
 
+
     @GetMapping
-    public ResponseEntity<List<ProductResponseDto>> getAllProducts() {
-        // Calls the service to get all products as DTOs
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<Page<ProductResponseDto>> getAllProducts(
+            @PageableDefault(size = 8, sort = "createdAt") Pageable pageable) {
+        return ResponseEntity.ok(productService.getAllProductsPaginated(pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponseDto> getProduct(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getProductById(id));
     }
 
 }
