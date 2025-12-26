@@ -54,4 +54,21 @@ public class GcsService {
         BlobId blobId = BlobId.of(bucketName, fileName);
         storage.delete(blobId);
     }
+
+    public FileUploadResult uploadBytes(byte[] content, String fileName, String contentType) {
+        // 1. Configure Blob metadata
+        BlobId blobId = BlobId.of(bucketName, fileName);
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
+                .setContentType(contentType)
+                .build();
+
+        // 2. Perform the upload
+        storage.create(blobInfo, content);
+
+        // 3. Construct URIs
+        String gcsUri = String.format("gs://%s/%s", bucketName, fileName);
+        String publicUrl = String.format("https://storage.googleapis.com/%s/%s", bucketName, fileName);
+
+        return new FileUploadResult(publicUrl, gcsUri);
+    }
 }

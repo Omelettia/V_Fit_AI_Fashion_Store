@@ -8,13 +8,13 @@ import { ProfileGallery } from "./components/ProfileGallery";
 import { AddressBook } from "./components/AddressBook"; 
 import { Button } from "@/components/ui/button";
 import type { UserProfile } from "@/types"; 
-import { useAuth } from "@/context/AuthContext"; // Import for global sync
+import { useAuth } from "@/context/AuthContext"; 
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
-  const { setUser: setGlobalUser } = useAuth(); // Destructure global setter
+  const { setUser: setGlobalUser } = useAuth(); 
 
   const loadProfile = async () => {
     try {

@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -85,4 +86,21 @@ public class UserController {
         userService.deleteAddress(userId, addressId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{userId}/save-ai-photo")
+    public ResponseEntity<Map<String, Object>> saveAiPhoto(@PathVariable Long userId, @RequestBody Map<String, String> body) {
+        // Extract the Base64 string from the JSON body
+        String base64Image = body.get("base64Image");
+
+        // Delegate the decoding and GCS upload logic to the Service layer
+        UserPhoto savedPhoto = userService.addAiPhotoToGallery(userId, base64Image);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Look saved to gallery!",
+                "photoId", savedPhoto.getId(),
+                "url", savedPhoto.getUrl()
+        ));
+    }
+
+
 }

@@ -77,24 +77,53 @@ public class UserService {
     /**
      * Business logic for adding a photo to a user's gallery
      */
-    @Transactional
-    public UserPhoto addPhotoToGallery(Long userId, MultipartFile file) throws IOException {
-        User user = userRepository.findById(userId).orElseThrow();
-
-        FileUploadResult result = gcsService.uploadFile(file, "users");
-
+    private UserPhoto savePhotoToGallery(User user, FileUploadResult result) {
         UserPhoto photo = new UserPhoto();
+        // Uses the method names from your FileUploadResult record/DTO
         photo.setUrl(result.publicUrl());
         photo.setGcsUri(result.gcsUri());
         photo.setUser(user);
 
-        // If this is the user's first photo, make it the primary profile picture
+        // Logic for setting the primary profile picture remains central
         if (user.getPhotos().isEmpty()) {
             photo.setPrimary(true);
             user.setProfilePicture(photo);
         }
 
         return userPhotoRepository.save(photo);
+    }
+
+    /**
+     * Business logic for adding a standard MultipartFile to a user's gallery
+     */
+    @Transactional
+    public UserPhoto addPhotoToGallery(Long userId, MultipartFile file) throws IOException {
+        User user = userRepository.findById(userId).orElseThrow();
+
+        // Organize uploads by userId for better bucket management
+        FileUploadResult result = gcsService.uploadFile(file, "users/" + userId + "/uploads");
+
+        return savePhotoToGallery(user, result);
+    }
+
+    /**
+     * Logic for saving AI-generated Base64 images to the user's gallery
+     */
+    @Transactional
+    public UserPhoto addAiPhotoToGallery(Long userId, String base64Data) {
+        User user = userRepository.findById(userId).orElseThrow();
+
+        // 1. Decode Base64 string to raw bytes
+        String pureBase64 = base64Data.substring(base64Data.indexOf(",") + 1);
+        byte[] imageBytes = java.util.Base64.getDecoder().decode(pureBase64);
+
+        // 2. Generate a structured unique path for the AI output
+        String fileName = "users/" + userId + "/tryons/" + java.util.UUID.randomUUID() + ".png";
+
+        // 3. Upload bytes directly to GCS via the new helper in GcsService
+        FileUploadResult result = gcsService.uploadBytes(imageBytes, fileName, "image/png");
+
+        return savePhotoToGallery(user, result);
     }
 
     @Transactional
@@ -166,4 +195,6 @@ public class UserService {
         // Address is removed from DB via 'orphanRemoval = true' in User entity
         userRepository.save(user);
     }
+
+
 }

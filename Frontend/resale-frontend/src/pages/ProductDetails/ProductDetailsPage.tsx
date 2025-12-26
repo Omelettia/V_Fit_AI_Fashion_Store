@@ -16,7 +16,7 @@ import { TryOnModal } from "./components/TryOnModal";
 export default function ProductDetailsPage({ onOpenCart }: { onOpenCart: () => void }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth(); 
+  const { user,refreshUser } = useAuth(); 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
@@ -62,8 +62,14 @@ export default function ProductDetailsPage({ onOpenCart }: { onOpenCart: () => v
       action: { label: "VIEW BAG", onClick: onOpenCart },
     });
   };
-  console.log("Full Product Data:", product);
-    console.log("Extracted GCS URI:", product.imageGcsUris?.[0]);
+
+  const handleUpdate = async () => {
+    // If your AuthContext has a way to re-fetch the user profile, call it here
+    if (refreshUser) {
+      await refreshUser();
+      toast.success("Gallery synchronized!");
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 animate-in fade-in duration-700">
@@ -116,6 +122,7 @@ export default function ProductDetailsPage({ onOpenCart }: { onOpenCart: () => v
         onClose={() => setIsTryOnOpen(false)} 
         user={user}
         productImage={product.imageGcsUris?.[0]}
+        onUpdate={handleUpdate}
       />
     </div>
   );

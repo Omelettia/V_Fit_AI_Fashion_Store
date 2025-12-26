@@ -1,5 +1,5 @@
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem("token"); // Get saved token
+  const token = localStorage.getItem("token");
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const headers: Record<string, string> = {
@@ -7,7 +7,6 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     ...(options.headers as Record<string, string>),
   };
 
-  
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -18,9 +17,17 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || "Something went wrong");
+    const text = await response.text();
+    let message = "Something went wrong";
+
+    try {
+      const data = text ? JSON.parse(text) : {};
+      message = data.message || message;
+    } catch {}
+
+    throw new Error(message);
   }
 
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 };

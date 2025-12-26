@@ -5,9 +5,10 @@ import { apiFetch } from "@/lib/api";
 import { Loader2, Download, Save, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-export function TryOnModal({ isOpen, onClose, user, productImage }: any) {
+export function TryOnModal({ isOpen, onClose, user, productImage, onUpdate }: any) {
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
 
   const handleGenerate = async () => {
@@ -19,7 +20,6 @@ export function TryOnModal({ isOpen, onClose, user, productImage }: any) {
           method: "POST"
       });
       
-      // Update with the key returned from backend
       setResultImage(response.imageUrl); 
       toast.success("Look generated!");
     } catch (err) {
@@ -29,7 +29,30 @@ export function TryOnModal({ isOpen, onClose, user, productImage }: any) {
     }
   };
 
-  // Convert Base64 Data URL to a real downloadable file
+  const handleSaveToProfile = async () => {
+    if (!resultImage) return;
+    
+    setIsSaving(true);
+    try {
+      await apiFetch(`/users/${user.id}/save-ai-photo`, {
+        method: "POST",
+        body: JSON.stringify({ base64Image: resultImage })
+      });
+      
+      toast.success("Added to your gallery!");
+      
+      // Refresh the profile gallery if the callback exists
+      if (onUpdate) {
+        await onUpdate(); 
+    } 
+      
+    } catch (err) {
+      toast.error("Failed to save to profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleDownload = () => {
     if (!resultImage) return;
     const link = document.createElement("a");
@@ -88,8 +111,12 @@ export function TryOnModal({ isOpen, onClose, user, productImage }: any) {
               <Button variant="outline" className="h-14 rounded-2xl gap-2 font-bold uppercase" onClick={handleDownload}>
                 <Download size={18} /> Download
               </Button>
-              <Button className="h-14 rounded-2xl gap-2 font-bold uppercase bg-zinc-900 text-white">
-                <Save size={18} /> Add to Profile
+              <Button 
+                disabled={isSaving}
+                onClick={handleSaveToProfile}
+                className="h-14 rounded-2xl gap-2 font-bold uppercase bg-zinc-900 text-white"
+              >
+                {isSaving ? <Loader2 className="animate-spin" /> : <><Save size={18} /> Add to Profile</>}
               </Button>
             </div>
             
