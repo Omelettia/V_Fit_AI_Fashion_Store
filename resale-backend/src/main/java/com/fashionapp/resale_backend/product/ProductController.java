@@ -65,6 +65,16 @@ public class ProductController {
         return ResponseEntity.ok(productService.mapToResponse(product));
     }
 
+    @DeleteMapping("/{productId}/images/{imageId}")
+    @Transactional
+    public ResponseEntity<Void> deleteProductImage(
+            @PathVariable Long productId,
+            @PathVariable Long imageId) {
+
+        productService.deleteProductImage(productId, imageId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/try-on")
     public ResponseEntity<Map<String, String>> tryOn(
             @RequestParam String personUri,

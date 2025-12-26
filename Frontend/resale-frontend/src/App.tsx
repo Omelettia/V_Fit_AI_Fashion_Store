@@ -76,7 +76,7 @@ function App() {
                     id={item.id}
                     name={item.name}
                     price={item.basePrice}
-                    image={item.imageUrls?.[0]} 
+                    image={item.images?.[0]?.url} 
                     brand={item.brand}
                   />
                 ))}

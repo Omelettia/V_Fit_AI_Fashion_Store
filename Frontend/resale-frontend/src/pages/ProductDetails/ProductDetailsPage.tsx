@@ -52,7 +52,7 @@ export default function ProductDetailsPage({ onOpenCart }: { onOpenCart: () => v
       id: product.id,
       name: product.name,
       price: product.basePrice,
-      image: product.imageUrls?.[0],
+      image: product.images?.[0]?.url,
       size: selectedVariant.size,
       color: selectedVariant.color,
       variantId: selectedVariant.id,
@@ -79,7 +79,10 @@ export default function ProductDetailsPage({ onOpenCart }: { onOpenCart: () => v
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
         <div className="lg:col-span-7">
-          <ImageGallery images={product.imageUrls || []} name={product.name} />
+          <ImageGallery 
+            images={product.images?.map((img: any) => img.url) || []} 
+            name={product.name} 
+          />
         </div>
 
         <div className="lg:col-span-5 flex flex-col space-y-10">
@@ -121,7 +124,7 @@ export default function ProductDetailsPage({ onOpenCart }: { onOpenCart: () => v
         isOpen={isTryOnOpen} 
         onClose={() => setIsTryOnOpen(false)} 
         user={user}
-        productImage={product.imageGcsUris?.[0]}
+        productImage={product.images?.[0]?.gcsUri}
         onUpdate={handleUpdate}
       />
     </div>
