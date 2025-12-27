@@ -17,6 +17,7 @@ import ProfilePage from "@/pages/Profile/ProfilePage";
 import SellerDashboardPage from "./pages/SellerDashboard/SellerDashboardPage";
 import ProductDetailsPage from "./pages/ProductDetails/ProductDetailsPage";
 import CheckoutPage from "./pages/Checkout/CheckoutPage";
+import OrderHistoryPage from "@/pages/OrderHistory/OrderHistoryPage";
 
 function App() {
   const [products, setProducts] = useState<any[]>([]);
@@ -108,8 +109,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
-          
-          
+          <Route path="/profile/orders" element={<OrderHistoryPage />} />         
           
           <Route 
             path="/product/:id" 

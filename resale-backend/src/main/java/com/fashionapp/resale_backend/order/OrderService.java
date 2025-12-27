@@ -3,6 +3,7 @@ package com.fashionapp.resale_backend.order;
 import com.fashionapp.resale_backend.address.Address;
 import com.fashionapp.resale_backend.address.AddressRepository;
 import com.fashionapp.resale_backend.order.dto.OrderCreateDto;
+import com.fashionapp.resale_backend.order.dto.OrderItemDto;
 import com.fashionapp.resale_backend.order.dto.OrderResponseDto;
 import com.fashionapp.resale_backend.product.ProductVariant;
 import com.fashionapp.resale_backend.product.ProductVariantRepository;
@@ -17,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -117,4 +120,158 @@ public class OrderService {
         res.setShippingAddress(shipping.getShippingAddress());
         return res;
     }
+
+
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getMyOrderHistory() {
+        // 1. Identify the buyer
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User buyer = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Fetch orders and map them
+        return orderRepository.findByBuyerIdOrderByOrderDateDesc(buyer.getId())
+                .stream()
+                .map(this::mapToHistoryResponse)
+                .collect(Collectors.toList());
+    }
+
+    private OrderResponseDto mapToHistoryResponse(Order order) {
+        OrderResponseDto res = new OrderResponseDto();
+        res.setOrderId(order.getId());
+        res.setTotalAmount(order.getTotalAmount());
+        res.setStatus(order.getStatus());
+        res.setPaymentMethod(order.getPaymentMethod());
+        res.setOrderDate(order.getOrderDate());
+
+        // Optional: Include item summary in the history view
+        List<String> itemSummaries = order.getItems().stream()
+                .map(item -> item.getQuantity() + "x " + item.getProductVariant().getProduct().getName())
+                .collect(Collectors.toList());
+        res.setItemSummaries(itemSummaries);
+
+        return res;
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getMySalesHistory() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User seller = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return orderRepository.findOrdersBySellerId(seller.getId())
+                .stream()
+                .map(order -> mapToSalesHistoryResponse(order, seller.getId()))
+                .collect(Collectors.toList());
+    }
+
+    private OrderResponseDto mapToSalesHistoryResponse(Order order, Long sellerId) {
+        OrderResponseDto res = new OrderResponseDto();
+        res.setOrderId(order.getId());
+        res.setStatus(order.getStatus());
+        res.setPaymentMethod(order.getPaymentMethod());
+        res.setOrderDate(order.getOrderDate());
+
+        // 1. Calculate ONLY the subtotal for this specific seller
+        double sellerSubtotal = order.getItems().stream()
+                .filter(item -> item.getProductVariant().getProduct().getSeller().getId().equals(sellerId))
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
+
+        res.setTotalAmount(sellerSubtotal); // Overwrite with the partial total
+
+        // 2. Filter item summaries to only show what they sold
+        List<String> sellerItems = order.getItems().stream()
+                .filter(item -> item.getProductVariant().getProduct().getSeller().getId().equals(sellerId))
+                .map(item -> item.getQuantity() + "x " + item.getProductVariant().getProduct().getName())
+                .collect(Collectors.toList());
+
+        res.setItemSummaries(sellerItems);
+
+        return res;
+    }
+
+    @Transactional(readOnly = true)
+    public OrderResponseDto getOrderDetail(Long orderId) {
+        // 1. Fetch the Order entity
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // 2. Identify the current logged-in user
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 3. Security Check: Ensure the user is actually part of this order
+        validateOrderAccess(order);
+
+        // 4. Map basic shared data (ID, Date, Status, Payment Method)
+        OrderResponseDto res = mapToHistoryResponse(order);
+
+        // 5. Add Shipping Details (Standard for both buyer and seller to see)
+        res.setShippingAddress(order.getShipping().getShippingAddress());
+        res.setReceiverName(order.getShipping().getReceiverName());
+
+        // 6. Role-Based Filtering Logic
+        boolean isBuyer = order.getBuyer().getId().equals(currentUser.getId());
+
+        List<OrderItemDto> itemDetails = order.getItems().stream()
+                .filter(item -> {
+                    // Buyers see everything; Sellers only see items where they are the owner
+                    boolean isThisSellersItem = item.getProductVariant().getProduct().getSeller().getId().equals(currentUser.getId());
+                    return isBuyer || isThisSellersItem;
+                })
+                .map(item -> {
+                    OrderItemDto idto = new OrderItemDto();
+                    idto.setProductName(item.getProductVariant().getProduct().getName());
+                    idto.setPrice(item.getPrice());
+                    idto.setQuantity(item.getQuantity());
+
+                    // Map variant details
+                    idto.setSize(item.getProductVariant().getSize());
+                    idto.setColor(item.getProductVariant().getColor());
+
+                    if (!item.getProductVariant().getProduct().getImages().isEmpty()) {
+                        idto.setImageUrl(item.getProductVariant().getProduct().getImages().get(0).getUrl());
+                    }
+                    return idto;
+                })
+                .collect(Collectors.toList());
+
+        res.setItems(itemDetails);
+
+        // 7. Context-Aware Total Calculation
+        if (isBuyer) {
+            // Buyer sees the global total for the entire transaction
+            res.setTotalAmount(order.getTotalAmount());
+        } else {
+            // Seller only sees the "Grand Total" of the items they actually sold
+            double sellerSubtotal = itemDetails.stream()
+                    .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                    .sum();
+            res.setTotalAmount(sellerSubtotal);
+        }
+
+        return res;
+    }
+
+    private void validateOrderAccess(Order order) {
+        // 1. Get the current logged-in user
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Check if the user is the Buyer
+        boolean isBuyer = order.getBuyer().getId().equals(currentUser.getId());
+
+        // 3. Check if the user is the Seller for ANY item in the order
+        boolean isSeller = order.getItems().stream()
+                .anyMatch(item -> item.getProductVariant().getProduct().getSeller().getId().equals(currentUser.getId()));
+
+        // 4. If neither, block access
+        if (!isBuyer && !isSeller) {
+            throw new RuntimeException("Unauthorized: You do not have permission to view this order.");
+        }
+    }
+
 }

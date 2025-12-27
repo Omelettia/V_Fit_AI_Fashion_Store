@@ -5,6 +5,8 @@ import com.fashionapp.resale_backend.order.dto.OrderResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -19,5 +21,20 @@ public class OrderController {
         OrderResponseDto response = orderService.placeOrder(dto);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my-history")
+    public ResponseEntity<List<OrderResponseDto>> getMyOrderHistory() {
+        return ResponseEntity.ok(orderService.getMyOrderHistory());
+    }
+
+    @GetMapping("/my-sales")
+    public ResponseEntity<List<OrderResponseDto>> getMySalesHistory() {
+        return ResponseEntity.ok(orderService.getMySalesHistory());
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderResponseDto> getOrderDetail(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.getOrderDetail(orderId));
     }
 }

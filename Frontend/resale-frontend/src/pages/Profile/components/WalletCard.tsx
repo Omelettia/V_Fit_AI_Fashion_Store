@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { CreditCard, ArrowUpRight } from "lucide-react";
+import { useNavigate } from "react-router-dom"; 
 
 export function WalletCard({ balance }: { balance: number }) {
+  const navigate = useNavigate(); 
+
   return (
     <div className="p-8 rounded-3xl border bg-zinc-900 text-white space-y-6 shadow-xl">
       <div className="flex justify-between items-start">
@@ -22,7 +25,13 @@ export function WalletCard({ balance }: { balance: number }) {
         <Button variant="secondary" className="w-full rounded-xl bg-white text-black hover:bg-zinc-200">
           <ArrowUpRight className="mr-2 h-4 w-4" /> Top Up
         </Button>
-        <Button variant="ghost" className="w-full rounded-xl text-zinc-400 hover:text-white">
+        
+        
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate("/profile/orders")} 
+          className="w-full rounded-xl text-zinc-400 hover:text-white"
+        >
           View History
         </Button>
       </div>

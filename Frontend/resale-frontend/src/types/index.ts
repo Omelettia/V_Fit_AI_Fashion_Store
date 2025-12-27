@@ -27,3 +27,31 @@ export interface UserProfile {
   photos: UserPhoto[];
   profilePicture?: UserPhoto;
 }
+
+export interface Order {
+  orderId: string;
+  receiverName: string ; 
+  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'; // Specific status types are better than just string
+  orderDate: string;
+  paymentMethod: string;
+  totalAmount: number;
+  itemSummaries: string[];
+}
+
+
+
+export interface OrderDetail extends Order {
+  orderId: string;
+  shippingAddress: string; 
+  items: OrderItem[];     
+}
+
+export interface OrderItem {
+  productId: number;
+  productName: string;
+  price: number;
+  quantity: number;
+  imageUrl?: string;
+  size?: string; 
+  color?: string;
+}

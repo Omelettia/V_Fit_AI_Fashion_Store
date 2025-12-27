@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -41,7 +42,7 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("product-images") // Matches child name in ProductImage
-    private List<ProductImage> images;
+    private List<ProductImage> images = new ArrayList<>();;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 }
