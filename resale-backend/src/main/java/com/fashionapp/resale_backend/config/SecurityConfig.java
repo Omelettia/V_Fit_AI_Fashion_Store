@@ -36,6 +36,9 @@ public class SecurityConfig {
                     corsConfiguration.setAllowedHeaders(List.of("*"));
                     return corsConfiguration;
                 }))
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/payment/vnpay-callback")
+                )
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // Public Endpoints
@@ -43,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll() // Allow browsing
                         .requestMatchers("/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products/try-on").authenticated()
+                        .requestMatchers("/api/payment/vnpay-callback").permitAll()
                         .anyRequest().authenticated()
                 )
                 // Tell Spring to check the JWT Token BEFORE checking the username/password

@@ -5,6 +5,8 @@ import com.fashionapp.resale_backend.address.AddressRepository;
 import com.fashionapp.resale_backend.order.dto.OrderCreateDto;
 import com.fashionapp.resale_backend.order.dto.OrderItemDto;
 import com.fashionapp.resale_backend.order.dto.OrderResponseDto;
+import com.fashionapp.resale_backend.payment.PaymentService;
+import com.fashionapp.resale_backend.payment.VNPayService;
 import com.fashionapp.resale_backend.product.ProductVariant;
 import com.fashionapp.resale_backend.product.ProductVariantRepository;
 import com.fashionapp.resale_backend.shipping.Shipping;
@@ -31,9 +33,12 @@ public class OrderService {
     private final AddressRepository addressRepository;
     private final ShippingRepository shippingRepository;
 
+    private final VNPayService vnpayService;
+    private final PaymentService paymentService;
+
     @Transactional
-    public OrderResponseDto placeOrder(OrderCreateDto dto) {
-        // 1. Authenticate Buyer via Security Context
+    public OrderResponseDto placeOrder(OrderCreateDto dto,String ipAddress) {
+        //  Authenticate Buyer via Security Context
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
@@ -43,17 +48,11 @@ public class OrderService {
         order.setOrderDate(LocalDateTime.now());
         order.setItems(new ArrayList<>());
 
-        // 2. Set Payment Intent & Initial Status
-        order.setPaymentMethod(dto.getPaymentMethod());
-        if ("COD".equalsIgnoreCase(dto.getPaymentMethod())) {
-            order.setStatus("PLACED_COD"); // Awaiting delivery & cash collection
-        } else {
-            order.setStatus("AWAITING_PAYMENT"); // Awaiting digital gateway response
-        }
+
 
         double total = 0;
 
-        // 3. Process Items & Validate Stock
+        //  Process Items & Validate Stock
         for (var itemDto : dto.getItems()) {
             ProductVariant variant = variantRepository.findById(itemDto.getProductVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant not found: " + itemDto.getProductVariantId()));
@@ -62,7 +61,7 @@ public class OrderService {
                 throw new RuntimeException("Insufficient stock for: " + variant.getProduct().getName());
             }
 
-            // Industrial Practice: Immediate inventory deduction
+            // Immediate inventory deduction
             variant.setStockQuantity(variant.getStockQuantity() - itemDto.getQuantity());
             variantRepository.save(variant);
 
@@ -77,9 +76,25 @@ public class OrderService {
         }
 
         order.setTotalAmount(total);
+        //  Set Payment Intent & Initial Status
+        order.setPaymentMethod(dto.getPaymentMethod());
+        if ("COD".equalsIgnoreCase(dto.getPaymentMethod())) {
+            order.setStatus("PLACED_COD"); // Awaiting delivery & cash collection
+        } else if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {
+            order.setStatus("AWAITING_PAYMENT");
+        } else if ("WALLET".equalsIgnoreCase(dto.getPaymentMethod())) {
+            if (buyer.getBalance() < total) {
+                throw new RuntimeException("Insufficient wallet balance");
+            }
+            // Deduct balance
+            buyer.setBalance(buyer.getBalance() - total);
+            userRepository.save(buyer);
+
+            order.setStatus("AWAITING_PAYMENT");
+        }
         Order savedOrder = orderRepository.save(order);
 
-        // 4. Create Shipping Snapshot (The Legal Record)
+        //  Create Shipping Snapshot (The Legal Record)
         Shipping shipping = new Shipping();
         shipping.setOrder(savedOrder);
         shipping.setStatus("PENDING");
@@ -103,7 +118,19 @@ public class OrderService {
 
         shippingRepository.save(shipping);
 
-        return mapToOrderResponse(savedOrder, shipping);
+        // 5. Build Response and Generate VNPay URL
+        OrderResponseDto response = mapToOrderResponse(savedOrder, shipping);
+
+        if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {
+
+            String paymentUrl = vnpayService.createPaymentUrl(savedOrder, ipAddress);
+            response.setPaymentUrl(paymentUrl);
+        }
+        if ("WALLET".equalsIgnoreCase(dto.getPaymentMethod())) {
+            paymentService.processPayment(savedOrder.getId(), "WALLET");
+        }
+
+        return response;
     }
 
     private String formatAddress(String street, String city, String zip) {
@@ -118,6 +145,13 @@ public class OrderService {
         res.setPaymentMethod(order.getPaymentMethod());
         res.setReceiverName(shipping.getReceiverName());
         res.setShippingAddress(shipping.getShippingAddress());
+
+        res.setOrderDate(order.getOrderDate());
+        List<String> summaries = order.getItems().stream()
+                .map(item -> item.getQuantity() + "x " + item.getProductVariant().getProduct().getName())
+                .collect(Collectors.toList());
+        res.setItemSummaries(summaries);
+
         return res;
     }
 

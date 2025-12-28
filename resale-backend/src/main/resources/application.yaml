@@ -1,6 +1,13 @@
 server:
   port: 8081
-
+vnpay:
+  tmn_code: I9F2C8N0
+  hash_secret: X8IGIHJ6ZAFACMYLOKVI5E9L5MH7WGVP
+  api_url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  return_url: "http://localhost:8081/api/payment/vnpay-callback"
+app:
+  frontend:
+    url: http://localhost:5173
 # Custom property for your GCS bucket
 gcp:
   bucket:

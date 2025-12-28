@@ -2,6 +2,7 @@ package com.fashionapp.resale_backend.order;
 
 import com.fashionapp.resale_backend.order.dto.OrderCreateDto;
 import com.fashionapp.resale_backend.order.dto.OrderResponseDto;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,8 +18,12 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponseDto> placeOrder(@RequestBody OrderCreateDto dto) {
-        OrderResponseDto response = orderService.placeOrder(dto);
+    public ResponseEntity<OrderResponseDto> placeOrder(@RequestBody OrderCreateDto dto,HttpServletRequest request) {
+        // Extract the client's IP address
+        String ipAddress = request.getRemoteAddr();
+
+        // Pass the IP to the service
+        OrderResponseDto response = orderService.placeOrder(dto, ipAddress);
 
         return ResponseEntity.ok(response);
     }

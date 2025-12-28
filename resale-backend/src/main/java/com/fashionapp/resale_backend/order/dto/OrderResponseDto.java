@@ -18,4 +18,5 @@ public class OrderResponseDto {
     private List<String> itemSummaries;
 
     private List<OrderItemDto> items;
+    private String paymentUrl;
 }
