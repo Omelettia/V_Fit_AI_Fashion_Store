@@ -1,6 +1,7 @@
 package com.fashionapp.resale_backend.payment;
 
 import com.fashionapp.resale_backend.user.User;
+import com.fashionapp.resale_backend.order.Order;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -18,6 +19,10 @@ public class Payout {
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     private Double amount;
     private String status; // e.g., "PENDING", "PAID"

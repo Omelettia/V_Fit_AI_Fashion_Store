@@ -22,11 +22,7 @@ export function WalletCard({ balance }: { balance: number }) {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        <Button variant="secondary" className="w-full rounded-xl bg-white text-black hover:bg-zinc-200">
-          <ArrowUpRight className="mr-2 h-4 w-4" /> Top Up
-        </Button>
-        
-        
+         
         <Button 
           variant="ghost" 
           onClick={() => navigate("/profile/orders")} 

@@ -73,25 +73,33 @@ public class VNPayCallbackController {
 
         //  Validate signature and update order status
         String responseCode = fields.get("vnp_ResponseCode");
-        String txnRef = fields.get("vnp_TxnRef");
+        String txnRefRaw = fields.get("vnp_TxnRef");
+
+        Long orderId;
+        try {
+            orderId = Long.parseLong(txnRefRaw.split("_")[0]);
+        } catch (Exception e) {
+            log.error("Failed to parse Order ID from txnRef: {}", txnRefRaw);
+            return redirect(frontendUrl + "/payment-error?reason=invalid_order_id");
+        }
         String amountStr = fields.get("vnp_Amount");
 
         if (calculatedHash.equals(vnp_SecureHash)) {
             if ("00".equals(responseCode)) {
-                log.info("VNPay Payment Success for Order ID: {}", txnRef);
+                log.info("VNPay Payment Success for Order ID: {}", orderId);
                 paymentService.processPayment(
-                        Long.parseLong(txnRef),
+                        orderId,
                         "VNPAY",
                         Double.parseDouble(amountStr),
                         responseCode
                 );
-                return redirect(frontendUrl + "/payment-success?orderId=" + txnRef);
+                return redirect(frontendUrl + "/payment-success?orderId=" + orderId);
             } else {
-                log.warn("VNPay Payment Failed with code: {} for Order ID: {}", responseCode, txnRef);
-                return redirect(frontendUrl + "/payment-failed?orderId=" + txnRef);
+                log.warn("VNPay Payment Failed with code: {} for Order ID: {}", responseCode, orderId);
+                return redirect(frontendUrl + "/payment-failed?orderId=" + orderId);
             }
         } else {
-            log.error("VNPay Security Alert: Hash mismatch detected for Order ID: {}", txnRef);
+            log.error("VNPay Security Alert: Hash mismatch detected for Order ID: {}", orderId);
             return redirect(frontendUrl + "/payment-error?reason=invalid_signature");
         }
     }

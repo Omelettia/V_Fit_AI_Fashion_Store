@@ -14,4 +14,5 @@ public class ProductCreateDto {
     private Long sellerId;
     private List<ProductVariantDto> variants;
     private List<String> imageUrls;
+    private String status;
 }

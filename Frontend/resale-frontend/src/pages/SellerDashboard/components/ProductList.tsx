@@ -71,7 +71,7 @@ export function ProductList({ products, onEdit }: ProductListProps) {
                   </td>
                   <td className="px-8 py-6">
                     <span className="px-2 py-1 rounded-md bg-green-50 text-green-600 text-[10px] font-black uppercase">
-                      Active
+                      {item.status}
                     </span>
                   </td>
                   <td className="px-8 py-6 text-right">

@@ -45,7 +45,8 @@ public class VNPayService {
         vnp_Params.put("vnp_Command", "pay");
         vnp_Params.put("vnp_TmnCode", tmnCode);
         vnp_Params.put("vnp_CurrCode", "VND");
-        vnp_Params.put("vnp_TxnRef", String.valueOf(order.getId()));
+        String txnRef = order.getId().toString() + "_" + System.currentTimeMillis();
+        vnp_Params.put("vnp_TxnRef", txnRef);
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang #" + order.getId());
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");

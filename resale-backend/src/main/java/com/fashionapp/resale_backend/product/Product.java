@@ -45,4 +45,6 @@ public class Product {
     private List<ProductImage> images = new ArrayList<>();;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    private String status = "ACTIVE";
 }

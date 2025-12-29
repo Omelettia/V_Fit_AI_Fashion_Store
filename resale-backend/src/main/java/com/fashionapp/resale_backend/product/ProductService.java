@@ -44,6 +44,8 @@ public class ProductService {
         product.setCategory(categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found")));
 
+        product.setStatus("ACTIVE");
+
         product.setSeller(currentSeller);
 
         product.setVariants(new ArrayList<>());
@@ -115,6 +117,9 @@ public class ProductService {
         product.setBasePrice(dto.getBasePrice());
         product.setBrand(dto.getBrand());
         product.setCondition(dto.getCondition());
+        if (dto.getStatus() != null) {
+            product.setStatus(dto.getStatus());
+        }
 
         // Update variants (clearing and re-adding for simplicity)
         if (dto.getVariants() != null) {
@@ -162,6 +167,7 @@ public class ProductService {
         response.setBasePrice(product.getBasePrice());
         response.setBrand(product.getBrand());
         response.setCondition(product.getCondition());
+        response.setStatus(product.getStatus());
 
         if (product.getCategory() != null) {
             response.setCategoryName(product.getCategory().getName());

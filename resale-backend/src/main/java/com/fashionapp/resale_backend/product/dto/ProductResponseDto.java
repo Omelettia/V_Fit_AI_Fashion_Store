@@ -13,6 +13,7 @@ public class ProductResponseDto {
     private String condition;
     private String categoryName;
     private String sellerShopName;
+    private String status;
     private List<ProductVariantDto> variants;
 
 

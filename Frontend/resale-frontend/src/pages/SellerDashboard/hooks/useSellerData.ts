@@ -1,20 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "@/lib/api";
 
-export function useSellerData(sellerId: number) {
+export function useSellerData(sellerId: number | undefined) {
   const [stats, setStats] = useState({ totalRevenue: 0, activeListings: 0, totalSales: 0 });
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const refreshData = async () => {
-    setLoading(true);
+  const refreshData = useCallback(async () => {
+   
+    if (!sellerId) return;
     
+    setLoading(true);
     try {
       const [statsData, productsData] = await Promise.all([
-        apiFetch(`/seller/stats?sellerId=${sellerId}`),
-        apiFetch(`/seller/products?sellerId=${sellerId}`)
-        
+        apiFetch("/seller/stats"),    
+        apiFetch("/seller/products")  
       ]);
+
       setStats(statsData);
       setProducts(productsData);
     } catch (err) {
@@ -22,11 +24,11 @@ export function useSellerData(sellerId: number) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sellerId]);
 
   useEffect(() => {
-    if (sellerId) refreshData();
-  }, [sellerId]);
+    refreshData();
+  }, [refreshData]);
 
   return { stats, products, loading, refreshData };
 }
