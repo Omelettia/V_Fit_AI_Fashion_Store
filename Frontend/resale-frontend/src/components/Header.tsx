@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react"; 
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,15 +16,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Define the Props interface for the Header
 interface HeaderProps {
   onOpenCart: () => void;
+  onSearch: (query: string) => void;
 }
 
-export function Header({ onOpenCart }: HeaderProps) {
+export function Header({ onOpenCart, onSearch }: HeaderProps) {
   const { user, setUser } = useAuth(); 
   const navigate = useNavigate();
   const cartCount = useCartStore((state) => state.count);
+  
+  // Local state for the input field
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Debouncing Logic
+  useEffect(() => {
+    // Set a timer to trigger search after 500ms of inactivity
+    const delayDebounceFn = setTimeout(() => {
+      onSearch(searchTerm);
+    }, 500);
+
+    // Cleanup: Clear the timer if the user types again before 500ms
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, onSearch]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -39,23 +54,22 @@ export function Header({ onOpenCart }: HeaderProps) {
           <h1 className="text-xl font-black tracking-tighter uppercase">FASHION_RE</h1>
         </Link>
 
+        {/* Responsive Debounced Search Bar */}
         <div className="relative flex-1 max-w-md hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <Input 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search brands, items..." 
-            className="pl-10 rounded-full bg-zinc-100 border-none focus-visible:ring-1 focus-visible:ring-zinc-300" 
+            className="pl-10 rounded-full bg-zinc-100 border-none focus-visible:ring-1 focus-visible:ring-zinc-300 h-11 text-xs font-medium" 
           />
         </div>
 
         <div className="flex items-center gap-5">
-          {/* Cart Trigger: Button instead of Link to avoid page disruption */}
-          <button 
-            onClick={onOpenCart} 
-            className="relative cursor-pointer hover:opacity-70 transition-opacity outline-none"
-          >
+          <button onClick={onOpenCart} className="relative outline-none">
             <ShoppingCart className="h-6 w-6" />
             {cartCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center rounded-full p-0 text-[10px] bg-black text-white border-2 border-white">
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center rounded-full text-[10px] bg-black text-white border-2 border-white">
                 {cartCount}
               </Badge>
             )}
@@ -64,7 +78,7 @@ export function Header({ onOpenCart }: HeaderProps) {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Avatar className="h-9 w-9 cursor-pointer hover:opacity-80 transition-opacity border border-zinc-200">
+                <Avatar className="h-9 w-9 cursor-pointer border border-zinc-200">
                   <AvatarImage src={user.profilePicture?.url} alt={user.firstName} />
                   <AvatarFallback className="bg-white text-zinc-400">
                     <User size={20} />
@@ -79,38 +93,24 @@ export function Header({ onOpenCart }: HeaderProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                
                 <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                  <Link to="/profile">
-                    <User className="mr-2 h-4 w-4" /> Profile
-                  </Link>
+                  <Link to="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link>
                 </DropdownMenuItem>
-
                 {user.roles?.some((r: any) => r.name === "ROLE_SELLER") && (
                   <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                    <Link to="/seller/dashboard">
-                      <LayoutDashboard className="mr-2 h-4 w-4" /> My Studio
-                    </Link>
+                    <Link to="/seller/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> My Studio</Link>
                   </DropdownMenuItem>
                 )}
-
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={handleLogout} 
-                  className="rounded-lg cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                >
+                <DropdownMenuItem onClick={handleLogout} className="rounded-lg cursor-pointer text-red-600 focus:bg-red-50">
                   <LogOut className="mr-2 h-4 w-4" /> Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="rounded-full px-6 font-bold text-xs" asChild>
-                <Link to="/login">Log In</Link>
-              </Button>
-              <Button className="rounded-full px-6 bg-black text-white font-bold text-xs" asChild>
-                <Link to="/register">Join</Link>
-              </Button>
+              <Button variant="ghost" className="rounded-full px-6 font-bold text-xs" asChild><Link to="/login">Log In</Link></Button>
+              <Button className="rounded-full px-6 bg-black text-white font-bold text-xs shadow-lg" asChild><Link to="/register">Join</Link></Button>
             </div>
           )}
         </div>

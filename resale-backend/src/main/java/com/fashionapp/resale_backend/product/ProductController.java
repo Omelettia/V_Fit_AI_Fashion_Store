@@ -8,6 +8,7 @@ import com.fashionapp.resale_backend.product.dto.ProductResponseDto;
 import com.fashionapp.resale_backend.user.User;
 import com.fashionapp.resale_backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -110,8 +111,13 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<Page<ProductResponseDto>> getAllProducts(
-            @PageableDefault(size = 8, sort = "createdAt") Pageable pageable) {
-        return ResponseEntity.ok(productService.getAllProductsPaginated(pageable));
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @PageableDefault(size = 8, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        return ResponseEntity.ok(productService.getStorefrontProducts(search, categoryId, minPrice, maxPrice, pageable));
     }
 
     @GetMapping("/{id}")

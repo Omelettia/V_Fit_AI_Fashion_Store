@@ -7,6 +7,7 @@ import com.fashionapp.resale_backend.product.dto.*;
 import com.fashionapp.resale_backend.user.User;
 import com.fashionapp.resale_backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -203,8 +204,64 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ProductResponseDto> getAllProductsPaginated(Pageable pageable) {
-        return productRepository.findAll(pageable).map(this::mapToResponse);
+    public Page<ProductResponseDto> getStorefrontProducts(
+            String search,
+            Long categoryId,
+            Double minPrice,
+            Double maxPrice,
+            Pageable pageable) {
+
+        // 1. Initialize Specification
+        Specification<Product> spec = Specification.allOf();
+
+        // 2. Recursive Category Filter (Finds products in this category AND all its subcategories)
+        if (categoryId != null) {
+            List<Long> allCategoryIds = getAllChildIds(categoryId);
+            spec = spec.and((root, query, cb) -> root.get("category").get("id").in(allCategoryIds));
+        }
+
+        // 3. Price Range Filters
+        if (minPrice != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("basePrice"), minPrice));
+        }
+        if (maxPrice != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("basePrice"), maxPrice));
+        }
+
+        // 4. Security Filter: Only show ACTIVE products to buyers
+        spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), "ACTIVE"));
+
+        // 5. Text Search Filter: Name or Brand
+        if (search != null && !search.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.or(
+                            cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"),
+                            cb.like(cb.lower(root.get("brand")), "%" + search.toLowerCase() + "%")
+                    )
+            );
+        }
+
+        // 6. Execute dynamic paginated query
+        return productRepository.findAll(spec, pageable).map(this::mapToResponse);
+    }
+
+    /**
+     * Helper method: Recursively finds all subcategory IDs.
+     * This ensures filtering by "Men" includes "Men's Tops", "Hoodies", etc.
+     */
+    private List<Long> getAllChildIds(Long categoryId) {
+        List<Long> ids = new ArrayList<>();
+        ids.add(categoryId);
+        categoryRepository.findById(categoryId).ifPresent(cat -> {
+            if (cat.getSubCategories() != null) {
+                for (Category sub : cat.getSubCategories()) {
+                    ids.addAll(getAllChildIds(sub.getId()));
+                }
+            }
+        });
+        return ids;
     }
 
     @Transactional(readOnly = true)
