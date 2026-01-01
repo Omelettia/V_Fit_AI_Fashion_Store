@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CreditCard, ArrowUpRight } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom"; 
 
 export function WalletCard({ balance }: { balance: number }) {

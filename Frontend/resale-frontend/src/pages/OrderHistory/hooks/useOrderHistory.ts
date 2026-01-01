@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api";
-import type { Order } from "@/types"; 
 
 export function useOrderHistory(mode: "buying" | "selling") {
   const [orders, setOrders] = useState<any[]>([]);

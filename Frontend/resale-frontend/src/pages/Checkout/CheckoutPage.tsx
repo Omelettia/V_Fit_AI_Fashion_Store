@@ -12,8 +12,7 @@ import {
   Banknote,
   Globe,
   Plus,
-  ShieldCheck,
-  MapPin
+  ShieldCheck
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import type { Address } from "@/types";

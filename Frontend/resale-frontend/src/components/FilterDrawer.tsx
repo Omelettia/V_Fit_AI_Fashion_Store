@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useState, useEffect } from "react";
-import { Check, ChevronRight } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface FilterDrawerProps {
   isOpen: boolean;
