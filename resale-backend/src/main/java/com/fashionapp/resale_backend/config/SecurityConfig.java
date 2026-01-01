@@ -76,7 +76,7 @@ public class SecurityConfig {
         corsConfiguration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "https://collette-exhibitable-gaddingly.ngrok-free.dev",
-                "https://v-fit-ai-fashion-store.vercel.app"
+                "https://v-fit-ai-fashion-store-a95czr9py-omelettias-projects-d042468c.vercel.app"
         ));
 
 
