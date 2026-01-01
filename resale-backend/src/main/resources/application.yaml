@@ -37,9 +37,9 @@ spring:
         project-id: project-e3f1272c-e056-48d4-8a9
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/resale_market_db
-    username: postgres
-    password: Mementomori
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/resaledb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:your_local_password}
   jpa:
     hibernate:
       ddl-auto: update
