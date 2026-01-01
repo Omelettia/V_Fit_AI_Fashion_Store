@@ -15,7 +15,7 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter; // Inject the guard
+    private final JwtAuthenticationFilter jwtAuthFilter;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
@@ -31,22 +31,25 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new CorsConfiguration();
-                    corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173"));
+                    corsConfiguration.setAllowedOrigins(List.of(
+                            "http://localhost:5173",
+                            "https://collette-exhibitable-gaddingly.ngrok-free.dev"
+                    ));
                     corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfiguration.setAllowedHeaders(List.of("*"));
+                    corsConfiguration.setAllowCredentials(true);
                     return corsConfiguration;
                 }))
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/payment/vnpay-callback")
-                )
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // CSRF disabled for REST APIs
                 .authorizeHttpRequests(auth -> auth
                         // Public Endpoints
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll() // Allow browsing
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers("/api/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/products/try-on").authenticated()
                         .requestMatchers("/api/payment/vnpay-callback").permitAll()
+
+                        // Protected Endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/products/try-on").authenticated()
                         .anyRequest().authenticated()
                 )
                 // Tell Spring to check the JWT Token BEFORE checking the username/password

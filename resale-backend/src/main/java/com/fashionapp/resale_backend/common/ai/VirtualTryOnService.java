@@ -19,7 +19,8 @@ import java.util.Map;
 @Slf4j
 public class VirtualTryOnService {
 
-    private final WebClient.Builder webClientBuilder;
+    // Inject the specifically configured WebClient bean
+    private final WebClient aiWebClient;
     private final ObjectMapper objectMapper;
 
     @Value("${spring.ai.vertex.ai.gemini.project-id}")
@@ -29,16 +30,16 @@ public class VirtualTryOnService {
     private String location;
 
     public String executeTryOn(String personGcsUri, String productGcsUri) throws IOException {
-        // 1. Get Auth Token via Application Default Credentials
+        // 1. Get Auth Token
         GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
                 .createScoped(Collections.singleton("https://www.googleapis.com/auth/cloud-platform"));
         String token = credentials.refreshAccessToken().getTokenValue();
 
-        // 2. Build API URL for the 08-04 model
+        // 2. Build API URL
         String url = String.format("https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/virtual-try-on-preview-08-04:predict",
                 location, projectId, location);
 
-        // 3. Construct Request Body per official specs
+        // 3. Construct Request Body
         Map<String, Object> requestBody = Map.of(
                 "instances", List.of(
                         Map.of(
@@ -53,8 +54,9 @@ public class VirtualTryOnService {
                 )
         );
 
-        // 4. Send Request
-        String responseBody = webClientBuilder.build().post()
+        // 4. Send Request using the pre-configured aiWebClient
+        log.info("Sending Try-On request to Vertex AI...");
+        String responseBody = aiWebClient.post()
                 .uri(url)
                 .header("Authorization", "Bearer " + token)
                 .bodyValue(requestBody)
@@ -62,11 +64,11 @@ public class VirtualTryOnService {
                 .bodyToMono(String.class)
                 .block();
 
-
         return parseBase64ToDataUrl(responseBody);
     }
 
     private String parseBase64ToDataUrl(String responseBody) throws IOException {
+        // The objectMapper here now has the 50MB string limit configured
         JsonNode root = objectMapper.readTree(responseBody);
         JsonNode predictions = root.path("predictions");
 
@@ -75,12 +77,14 @@ public class VirtualTryOnService {
             String base64 = firstItem.path("bytesBase64Encoded").asText();
             String mimeType = firstItem.path("mimeType").asText("image/png");
 
-            if (!base64.isEmpty()) {
+            if (base64 != null && !base64.isEmpty()) {
+                log.info("Successfully parsed Base64 image. Length: {}", base64.length());
                 return String.format("data:%s;base64,%s", mimeType, base64);
             }
         }
 
-        log.error("AI Response failed to provide bytes: {}", responseBody);
+        log.error("AI Response failed to provide bytes. Response length: {}",
+                responseBody != null ? responseBody.length() : 0);
         throw new RuntimeException("AI failed to generate image data.");
     }
 }
