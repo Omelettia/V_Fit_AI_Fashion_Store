@@ -7,13 +7,21 @@
 FASHION_RE is a full-stack e-commerce application designed for buying and selling second-hand clothing. The project explores the integration of Generative AI in retail, specifically using Large Language Models to help users visualize how clothes might look on them.
 
 ## 02. PREVIEW
-| Home Interface | Virtual Try-On (AI) |
-| :---: | :---: |
-| ![Home Screen](./Images/Homepage.png) | ![Try-On Demo](./Images/Tryon.png) |
 
-| Product Details | Seller Dashboard |
+### Digital Interface
+| Home Feed (Synced Objects) | Seller Inventory Control |
 | :---: | :---: |
-| ![Product Page](./Images/Productpage.png) | ![Seller Page](./Images/Sellerpage.png) |
+| ![Home Screen](./Images/Homepage.png) | ![Seller Page](./Images/Sellerpage.png) |
+
+### AI Virtual Try-On Workflow
+| Step 1: Source & Selection | Step 2: AI Generated Result |
+| :---: | :---: |
+| ![Tryon Source](./Images/Tryon.png) | ![Tryon Result](./Images/Tryon2.png) |
+
+### User Experience
+| Product Discovery | Secure Profile & Addresses |
+| :---: | :---: |
+| ![Product Page](./Images/Productpage.png) | ![Profile Page](./Images/Profilepage.png) |
 
 ## 03. FEATURES
 * **AI Try-On:** An experimental feature using Virtual Try-On Preview 08-04 to synthesize an image of a user wearing a selected product.
