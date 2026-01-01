@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
 vnpay:
   tmn_code: ${VNP_TMN_CODE:your_local_sandbox_code}
   hash_secret: ${VNP_HASH_SECRET:your_local_sandbox_secret}
