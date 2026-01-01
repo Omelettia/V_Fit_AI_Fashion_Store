@@ -1,18 +1,19 @@
 server:
   port: 8081
 vnpay:
-  tmn_code: I9F2C8N0
-  hash_secret: X8IGIHJ6ZAFACMYLOKVI5E9L5MH7WGVP
-  api_url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-  return_url: "http://localhost:8081/api/payment/vnpay-callback"
+  tmn_code: ${VNP_TMN_CODE:your_local_sandbox_code}
+  hash_secret: ${VNP_HASH_SECRET:your_local_sandbox_secret}
+  api_url: ${VNP_API_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  return_url: ${VNP_RETURN_URL:http://localhost:8081/api/payment/vnpay-callback}
 app:
   frontend:
     url: http://localhost:5173
-# Custom property for your GCS bucket
+
 gcp:
   bucket:
-    name: resale-ai-outputs-232931
-
+    name: ${GCP_BUCKET_CODE:your_bucket_code}
+jwt:
+  secret: ${JWT_SECRET:default_very_long_secret_key_for_local_testing}
 spring:
   codec:
     max-in-memory-size: 50MB
@@ -20,11 +21,16 @@ spring:
     import: "optional:classpath:application-secrets.properties"
   application:
     name: resale-backend
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
   ai:
     vertex:
       ai:
         gemini:
-          project-id: project-e3f1272c-e056-48d4-8a9
+          project-id: ${PROJECT_ID:your_project_id}
           location: us-central1
 
   cloud:
@@ -34,15 +40,16 @@ spring:
       storage:
         enabled: true
       core:
-        project-id: project-e3f1272c-e056-48d4-8a9
+        project-id: ${PROJECT_ID:your_project_id}
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/resale_market_db
-    username: postgres
-    password: Mementomori
+    url: ${SPRING_DATASOURCE_URL:your_local_database}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:your_local_password}
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: true
+
