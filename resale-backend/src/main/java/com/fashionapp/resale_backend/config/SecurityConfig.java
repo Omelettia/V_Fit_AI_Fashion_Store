@@ -33,7 +33,8 @@ public class SecurityConfig {
                     var corsConfiguration = new CorsConfiguration();
                     corsConfiguration.setAllowedOrigins(List.of(
                             "http://localhost:5173",
-                            "https://collette-exhibitable-gaddingly.ngrok-free.dev"
+                            "https://collette-exhibitable-gaddingly.ngrok-free.dev",
+                            "https://v-fit-ai-fashion-store.vercel.app"
                     ));
                     corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfiguration.setAllowedHeaders(List.of("*"));
