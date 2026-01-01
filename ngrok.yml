@@ -1,8 +1,0 @@
-version: "3"
-agent:
-  authtoken: 37VorNa5U2IZFY5MWwXnpl9Yuoa_HgXWQMCQo4ZeqKWzX7by
-tunnels:
-  fashion-frontend:
-    proto: http
-    addr: 5173
-    
