@@ -31,18 +31,13 @@ public class VirtualTryOnService {
     private String location;
 
     public String executeTryOn(String personGcsUri, String productGcsUri) throws IOException {
-        // 1. Get Auth Token using Service Account JSON from Environment Variable
         GoogleCredentials credentials = getCredentials();
-
-        // Ensure the token is valid/refreshed
         credentials.refreshIfExpired();
         String token = credentials.getAccessToken().getTokenValue();
 
-        // 2. Build API URL
         String url = String.format("https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/virtual-try-on-preview-08-04:predict",
                 location, projectId, location);
 
-        // 3. Construct Request Body
         Map<String, Object> requestBody = Map.of(
                 "instances", List.of(
                         Map.of(
@@ -57,40 +52,35 @@ public class VirtualTryOnService {
                 )
         );
 
-        // 4. Send Request using WebClient
         log.info("Sending Try-On request to Vertex AI project: {}", projectId);
 
-        String responseBody = aiWebClient.post()
+        // FIX: Use byte[] instead of String to save memory
+        byte[] responseBytes = aiWebClient.post()
                 .uri(url)
                 .header("Authorization", "Bearer " + token)
                 .bodyValue(requestBody)
                 .retrieve()
-                .bodyToMono(String.class)
+                .bodyToMono(byte[].class)
                 .block();
 
-        return parseBase64ToDataUrl(responseBody);
+        return parseBytesToDataUrl(responseBytes);
     }
 
-    /**
-     * Helper to load credentials from Environment Variable or Local Shell
-     */
     private GoogleCredentials getCredentials() throws IOException {
         String gcpKeyJson = System.getenv("GCP_JSON_KEY");
 
         if (gcpKeyJson != null && !gcpKeyJson.isBlank()) {
-            log.info("Using GCP credentials from environment variable 'GCP_JSON_KEY'");
             return GoogleCredentials.fromStream(
                     new ByteArrayInputStream(gcpKeyJson.getBytes(StandardCharsets.UTF_8))
             ).createScoped(Collections.singleton("https://www.googleapis.com/auth/cloud-platform"));
         }
 
-        log.info("GCP_JSON_KEY not found. Falling back to Application Default Credentials...");
         return GoogleCredentials.getApplicationDefault()
                 .createScoped(Collections.singleton("https://www.googleapis.com/auth/cloud-platform"));
     }
 
-    private String parseBase64ToDataUrl(String responseBody) throws IOException {
-        JsonNode root = objectMapper.readTree(responseBody);
+    private String parseBytesToDataUrl(byte[] responseBytes) throws IOException {
+        JsonNode root = objectMapper.readTree(responseBytes);
         JsonNode predictions = root.path("predictions");
 
         if (predictions.isArray() && !predictions.isEmpty()) {
@@ -99,12 +89,11 @@ public class VirtualTryOnService {
             String mimeType = firstItem.path("mimeType").asText("image/png");
 
             if (base64 != null && !base64.isEmpty()) {
-                log.info("Successfully received Base64 image from Vertex AI. Length: {}", base64.length());
+                log.info("Successfully received Base64 image. Bytes received: {}", responseBytes.length);
                 return String.format("data:%s;base64,%s", mimeType, base64);
             }
         }
 
-        log.error("AI Response failed to provide image bytes. Response: {}", responseBody);
         throw new RuntimeException("AI failed to generate virtual try-on image.");
     }
 }
