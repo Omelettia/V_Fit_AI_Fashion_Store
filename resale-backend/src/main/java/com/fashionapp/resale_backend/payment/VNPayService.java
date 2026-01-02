@@ -9,9 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
-
 
 @Slf4j
 @Service
@@ -30,70 +31,63 @@ public class VNPayService {
     @Value("${vnpay.return_url}")
     private String returnUrl;
 
-    /**
-     * Generates a secure redirect URL to the VNPay Sandbox/Production gateway.
-     * * @param order The order entity containing ID and total amount.
-     * @param ipAddress The sanitized client IP address (IPv4).
-     * @return A fully qualified URL for redirection.
-     */
     public String createPaymentUrl(Order order, String ipAddress) {
-        log.info("Generating VNPay URL for Order ID: {} from IP: {}", order.getId(), ipAddress);
+        log.info("Generating VNPay URL for Order ID: {}", order.getId());
 
-        // TreeMap ensures keys are naturally sorted, which is mandatory for the SecureHash
+        // 1. Force Vietnam Timezone (GMT+7)
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        ZonedDateTime now = ZonedDateTime.now(vietnamZone);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+        String vnp_CreateDate = now.format(formatter);
+        String vnp_ExpireDate = now.plusMinutes(15).format(formatter);
+
+        // 2. Prepare Parameters
         Map<String, String> vnp_Params = new TreeMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");
         vnp_Params.put("vnp_TmnCode", tmnCode);
+        vnp_Params.put("vnp_Amount", String.valueOf((long) (order.getTotalAmount() * 100)));
         vnp_Params.put("vnp_CurrCode", "VND");
-        String txnRef = order.getId().toString() + "_" + System.currentTimeMillis();
-        vnp_Params.put("vnp_TxnRef", txnRef);
+        vnp_Params.put("vnp_TxnRef", order.getId().toString() + "_" + System.currentTimeMillis());
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang #" + order.getId());
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", returnUrl);
         vnp_Params.put("vnp_IpAddr", ipAddress);
-
-        // Amount: Must be multiplied by 100 as per VNPay standard
-        long amount = (long) (order.getTotalAmount() * 100);
-        vnp_Params.put("vnp_Amount", String.valueOf(amount));
-
-        // Dates: Using GMT+7 timezone format yyyyMMddHHmmss
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-
-        // Set 15-minute expiration for the payment link
-        cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
-        // Build Hash Data and Query String
+        // 3. Build Query String & Hash Data
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
 
-        Iterator<Map.Entry<String, String>> itr = vnp_Params.entrySet().iterator();
-        while (itr.hasNext()) {
-            Map.Entry<String, String> entry = itr.next();
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if (value != null && !value.isEmpty()) {
-                // HMAC hash data must be URL encoded
-                hashData.append(key).append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII));
-                query.append(URLEncoder.encode(key, StandardCharsets.US_ASCII)).append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII));
+        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+        Collections.sort(fieldNames);
 
-                if (itr.hasNext()) {
+        for (int i = 0; i < fieldNames.size(); i++) {
+            String fieldName = fieldNames.get(i);
+            String fieldValue = vnp_Params.get(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                // Build hash data
+                hashData.append(fieldName);
+                hashData.append('=');
+                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+
+                // Build query string
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
+                query.append('=');
+                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+
+                if (i < fieldNames.size() - 1) {
                     query.append('&');
                     hashData.append('&');
                 }
             }
         }
 
-        // Generate HMAC SHA512 signature for security
+        // 4. Final URL
         String secureHash = VNPayUtil.hmacSHA512(hashSecret, hashData.toString());
-        String finalUrl = apiUrl + "?" + query.toString() + "&vnp_SecureHash=" + secureHash;
-
-        log.debug("VNPay Redirect URL created successfully.");
-        return finalUrl;
+        return apiUrl + "?" + query.toString() + "&vnp_SecureHash=" + secureHash;
     }
 }
