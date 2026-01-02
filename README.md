@@ -50,3 +50,8 @@ FASHION_RE is a full-stack e-commerce application designed for buying and sellin
 1. Navigate to the frontend directory.
 2. Run `npm install`.
 3. Start the workspace with `npm run dev`.
+
+## DEMO
+!. Deploy link: https://v-fit-ai-fashion-store-a95czr9py-omelettias-projects-d042468c.vercel.app/
+  The AI currently doesn't work because the free tier backend don't have enough memory to receive the returned image
+2. Youtube demo: https://youtu.be/pljdU3HwUlA
