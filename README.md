@@ -53,5 +53,5 @@ FASHION_RE is a full-stack e-commerce application designed for buying and sellin
 
 ## DEMO
 1. Deploy link: https://v-fit-ai-fashion-store-a95czr9py-omelettias-projects-d042468c.vercel.app/
-  The AI currently doesn't work because the free tier backend don't have enough memory to receive the returned image
+* The AI currently doesn't work because the free tier backend don't have enough memory to receive the returned image
 2. Youtube demo: https://youtu.be/pljdU3HwUlA
